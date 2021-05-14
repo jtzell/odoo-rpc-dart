@@ -60,7 +60,7 @@ class OdooSession {
       versionInfo = info['server_version_info'];
     }
     return OdooSession(
-      id: info['id'] as String,
+      id: info['session_id'] as String,
       userId: info['uid'] as int,
       partnerId: info['partner_id'] as int,
       companyId: info['company_id'] as int,

@@ -55,8 +55,7 @@ class OdooClient {
     // Disable stream until we get listeners
     this._sessionStreamActive = false;
     this._sessionStreamController = StreamController<OdooSession>.broadcast(
-        onListen: _startSteam,
-        onCancel: _stopStream);
+        onListen: _startSteam, onCancel: _stopStream);
   }
 
   void _startSteam() => _sessionStreamActive = true;
@@ -91,11 +90,11 @@ class OdooClient {
   void _updateSessionIdFromCookies(http.Response response) {
     String rawCookie = response.headers['set-cookie'];
     if (rawCookie != null) {
-      int index = rawCookie.indexOf(';');
-      var sessionCookie =
-          (index == -1) ? rawCookie : rawCookie.substring(0, index);
-      if (sessionCookie.split('=').length == 2) {
-        final newSessionId = sessionCookie.split('=')[1];
+      final re = RegExp(r'session_id=(\S+);');
+      final match = re.firstMatch(rawCookie);
+
+      if (match.groupCount == 2) {
+        final newSessionId = match.group(1);
         _setSessionId(newSessionId);
       }
     }
@@ -103,7 +102,7 @@ class OdooClient {
 
   /// Low Level RPC call.
   /// It has to be used on all Odoo Controllers with type='json'
-  Future<dynamic> callRPC(path, funcName, params) async {
+  Future<dynamic> callRPC(String path, String funcName, dynamic params) async {
     var headers = {'Content-type': 'application/json'};
 
     if (_sessionId != null) {
@@ -113,7 +112,7 @@ class OdooClient {
     var url = baseURL + path;
     var body = json.encode({
       'jsonrpc': '2.0',
-      'method': 'funcName',
+      'method': funcName,
       'params': params,
       'id': Uuid().v1()
     });
